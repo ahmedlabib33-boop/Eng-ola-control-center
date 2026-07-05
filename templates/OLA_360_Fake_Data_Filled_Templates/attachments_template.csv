@@ -1,0 +1,13 @@
+﻿entity_type,entity_id,file_name,file_path
+warning,1,demo_b01_steel_balance.xlsx,uploads/demo_b01_steel_balance.xlsx
+warning,2,demo_b02_interface_matrix.pdf,uploads/demo_b02_interface_matrix.pdf
+warning,4,demo_b04_opening_register.xlsx,uploads/demo_b04_opening_register.xlsx
+warning,6,demo_vendor_recovery_schedule.pdf,uploads/demo_vendor_recovery_schedule.pdf
+warning,8,demo_authority_possession_notice.pdf,uploads/demo_authority_possession_notice.pdf
+commitment,1,demo_supplier_delivery_confirmation.pdf,uploads/demo_supplier_delivery_confirmation.pdf
+commitment,5,demo_zone_1_signed_checklist.pdf,uploads/demo_zone_1_signed_checklist.pdf
+commitment,8,demo_trial_mix_submission.pdf,uploads/demo_trial_mix_submission.pdf
+meeting,3,demo_b01_recovery_workshop_minutes.pdf,uploads/demo_b01_recovery_workshop_minutes.pdf
+meeting,7,demo_data_quality_review_minutes.pdf,uploads/demo_data_quality_review_minutes.pdf
+decision,6,demo_factory_expeditor_scope.pdf,uploads/demo_factory_expeditor_scope.pdf
+milestone,12,demo_executive_report_checklist.xlsx,uploads/demo_executive_report_checklist.xlsx

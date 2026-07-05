@@ -1,0 +1,9 @@
+Discussion summary: Buildings delay reviewed with procurement impact.
+Decision: Submit revised recovery plan by 6 July.
+Action required: Prepare recovery plan and evidence pack.
+Responsible person: Project Controls Lead
+Due date: 2026-07-06
+Priority: Critical
+Related project: Building B01
+Related warning: Milestone delay warning
+Supporting attachment: uploads/b01-delay-note.pdf

@@ -1,0 +1,24 @@
+﻿meeting_id,name,role
+1,Buildings Sector Director,Chair
+1,PMO Controls Lead,Presenter
+1,Project Managers,Attendee
+2,PMO Director,Chair
+2,Sector Directors,Decision maker
+2,Portfolio Controls Manager,Presenter
+3,B01 Project Director,Chair
+3,Procurement Manager,Action owner
+3,Planning Manager,Presenter
+4,Design Manager,Chair
+4,MEP Manager,Action owner
+4,Technical Office Managers,Attendee
+5,Tunnels Sector Director,Chair
+5,Supply Chain Lead,Presenter
+5,Vendor Representative,Attendee
+6,Infrastructure Director,Chair
+6,Stakeholder Manager,Presenter
+6,Authority Coordinator,Attendee
+7,PMO Controls Lead,Chair
+7,Project Controls Engineers,Attendee
+8,Buildings Sector Manager,Chair
+8,QA/QC Manager,Presenter
+8,Construction Manager,Action owner

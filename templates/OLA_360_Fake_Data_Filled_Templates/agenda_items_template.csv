@@ -1,0 +1,22 @@
+﻿meeting_id,title,related_warning_id,status
+1,Review B01 steel availability and slab priorities,1,Open
+1,Review B03 shop-drawing turnaround,3,Open
+1,Review B04 manpower recovery,11,Open
+2,Confirm executive intervention for tunnel ventilation package,6,Open
+2,Approve portfolio reporting cut-off response,10,Open
+2,Review sector-level milestone confidence,,Open
+3,Validate reinforcement demand and stock balance,1,Open
+3,Confirm supplier dispatch and delivery dates,1,Open
+3,Approve interim allocation priorities,1,Open
+4,Close B02 basement IFC interface list,2,Open
+4,Approve B04 coordinated opening schedule,4,Open
+4,Agree zone release and inspection workflow,4,Open
+5,Review approved manufacturing baseline requirement,6,Open
+5,Confirm factory expediting and inspection evidence,6,Open
+5,Review permit status for extended night shifts,7,Open
+6,Confirm authority possession constraints,8,Open
+6,Assess revised cutover methodology,8,Open
+7,Review projects with stale progress updates,10,Closed
+7,Confirm reporting freeze and reminder workflow,10,Closed
+8,Close dewatering standby arrangements,5,Open
+8,Confirm trial-mix approval and pour booking,12,Open

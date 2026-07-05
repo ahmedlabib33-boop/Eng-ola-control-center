@@ -1,0 +1,25 @@
+﻿warning_id,evidence_text,source
+1,Steel balance forecast becomes negative before the second planned B01 slab pour,Demo steel allocation forecast
+1,Supplier confirmation does not include a committed dispatch date,Demo supplier correspondence
+2,IFC interface query has remained open for nine calendar days,Demo RFI register
+2,B02 basement shop drawing is held pending revised opening coordinates,Demo shop-drawing tracker
+3,Second resubmission contains repeated comments from the prior review cycle,Demo submittal comparison
+3,Fabrication release is linked to approval of the outstanding structural package,Demo two-week lookahead
+4,Two slab zones have no signed MEP opening schedule,Demo coordination matrix
+4,Inspection request cannot be raised until builder-work drawings are approved,Demo inspection plan
+5,Measured inflow temporarily exceeded the operating pump capacity,Demo site observation
+5,Standby pump mobilization was initiated on 2026-07-03,Demo mitigation log
+6,Vendor manufacturing schedule is still marked draft,Demo vendor document register
+6,Required inspection hold points are not reflected in the supplier timeline,Demo procurement review
+7,Permit expires before the planned start of extended night shifts,Demo permit tracker
+7,Authority review meeting is tentatively planned for 2026-07-08,Demo stakeholder log
+8,Authority notice provides a six-hour possession rather than the planned ten hours,Demo traffic authority notice
+8,Current method statement assumes continuous overnight access,Demo approved method statement
+9,Formwork output averaged 410 square metres against a 500-square-metre target,Demo daily production dashboard
+9,Second striking crew is not yet fully mobilized,Demo resource plan
+10,B03 and North Utilities updates are older than seven days,Demo data freshness report
+10,Automated reminder was issued to both project controls leads,Demo notification log
+11,Actual specialist workforce is 42 against a planned requirement of 60,Demo manpower histogram
+11,Subcontractor proposed staged mobilization over the next ten days,Demo recovery correspondence
+12,Trial-mix laboratory report was submitted on 2026-07-02,Demo quality document register
+12,Consultant review comments are limited to durability documentation,Demo technical review note

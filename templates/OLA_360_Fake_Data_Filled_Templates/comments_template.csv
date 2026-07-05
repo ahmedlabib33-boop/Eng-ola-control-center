@@ -1,0 +1,21 @@
+﻿entity_type,entity_id,author,body
+warning,1,PMO Director,Do not close this warning until supplier-backed delivery dates and allocation impacts are verified.
+warning,2,Buildings Sector Director,Consolidate all design interfaces in one matrix and assign a response owner to each item.
+warning,4,Design Manager,Zone-based release is acceptable only with a signed builder-work checklist.
+warning,6,Tunnels Sector Director,Recovery baseline must include factory inspection gates and objective evidence.
+warning,8,Infrastructure Director,Quantify the programme and cost effect of the shorter possession before approval.
+warning,10,PMO Controls Lead,One missing update has been received; keep the remaining item escalated until validated.
+commitment,1,Portfolio Controls Manager,Include delivery quantities by diameter and the activity demand date.
+commitment,3,B02 Project Manager,The interface matrix is complete except for two consultant responses.
+commitment,5,B04 Project Manager,Zone 1 can proceed; Zone 2 remains held pending electrical confirmation.
+commitment,8,QA/QC Director,Escalate immediately if the approval is not received before the batching reservation expires.
+commitment,9,PMO Director,Vendor evidence should be uploaded weekly and reviewed against the baseline.
+commitment,13,PMO Director,Apply the reporting cut-off consistently and record exceptions in the audit trail.
+meeting,3,Planning Manager,Use the latest demand-loaded steel forecast during the recovery workshop.
+meeting,4,MEP Manager,Bring the coordinated opening register and signed discipline comments.
+meeting,7,PMO Systems Analyst,Stale-data alert test was successful for the seven-day threshold.
+decision,1,B01 Project Director,Decision is urgent because the next reinforcement release is due within three days.
+decision,6,Supply Chain Lead,Factory expeditor scope and reporting frequency have been drafted.
+milestone,6,Construction Manager,Raft pour remains achievable if approval is closed and the batching slot is retained.
+milestone,8,Systems Manager,Ventilation package delivery is the main threat to energization confidence.
+project,8,PMO Director,Prioritize reliable portfolio data over cosmetic dashboard enhancements.
