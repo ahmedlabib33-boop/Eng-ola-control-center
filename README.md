@@ -59,6 +59,7 @@ If Render asks for a credit card, deploy on Hugging Face Spaces using Docker CPU
 - Dockerfile: `Dockerfile`
 - App port: `7860`
 - Start command inside Docker: `uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860}`
+- Publish script: `.\DEPLOY_HUGGINGFACE_SPACE.ps1 -SpaceId "YOUR_HF_USERNAME/ola-360"`
 - Guide: `docs/HUGGINGFACE_SPACES_DEPLOYMENT.md`
 
 ## Data Input Templates

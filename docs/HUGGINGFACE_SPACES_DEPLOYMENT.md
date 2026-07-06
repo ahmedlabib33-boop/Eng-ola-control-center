@@ -29,6 +29,18 @@ The repository includes:
 6. Create the Space.
 7. Upload or push this repository content to the Space repository.
 
+## Publish By Script
+
+Create a Hugging Face access token, then run:
+
+```powershell
+cd "D:\Eng. OLA"
+$env:HF_TOKEN="hf_your_token_here"
+.\DEPLOY_HUGGINGFACE_SPACE.ps1 -SpaceId "YOUR_HF_USERNAME/ola-360"
+```
+
+The script creates the Docker Space if needed and uploads the app files. It excludes local databases, logs, uploads, exports, virtual environments, and old archived program files.
+
 ## Expected Runtime
 
 The Docker container starts:
