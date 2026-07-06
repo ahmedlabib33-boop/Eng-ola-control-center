@@ -25,6 +25,26 @@ Seeded credentials are still preserved for when login is restored:
 
 The database is stored at `data/ola_360.db` and is not deleted by build/clean scripts.
 
+## Public Deployment
+
+The full OLA 360 app is a Flet ASGI application. Deploy it on Render as a Python Web Service from:
+
+```text
+ahmedlabib33-boop/Eng-ola-control-center
+```
+
+Render settings:
+
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+- ASGI entrypoint: `main:app`
+- Branch: `main`
+- Instance type: Free
+
+The repository includes `render.yaml`, `.python-version`, and `Procfile` for deployment. Streamlit Cloud remains only a compatibility notice and is not the main public app host.
+
+Full deployment checklist: `docs/RENDER_DEPLOYMENT.md`.
+
 ## Data Input Templates
 
 Templates are in `templates/`.
