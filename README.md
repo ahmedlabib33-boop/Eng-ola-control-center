@@ -29,6 +29,7 @@ Seeded credentials are still preserved for when login is restored:
 - Desktop: `.\RUN_FLET_DESKTOP.ps1`
 - Main launcher: `.\RUN_APP.bat`
 - Tests: `.\RUN_TESTS.ps1`
+- Command and handoff prompts: `prompt.md`
 
 The database is stored at `data/ola_360.db` and is not deleted by build/clean scripts.
 
