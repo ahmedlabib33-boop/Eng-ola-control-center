@@ -40,6 +40,7 @@ class AIService:
         }
 
     def extract_meeting_intelligence(self, notes: str, title: str = "Executive meeting") -> dict[str, str]:
+        transcript = notes.strip()
         lines = [line.strip("- *\t ") for line in notes.splitlines() if line.strip()]
         if not lines:
             lines = ["No discussion text was provided. Add notes or recording transcript before approval."]
@@ -58,12 +59,18 @@ class AIService:
         due_date = labels.get("due_date") or self._first_date(lines) or (date.today() + timedelta(days=3)).isoformat()
         owner = labels.get("responsible_person") or labels.get("owner") or self._owner_from_action(action) or "Project Manager"
         priority = labels.get("priority") or ("Critical" if any(word in " ".join(lines).lower() for word in ["critical", "overdue", "delay", "urgent"]) else "Medium")
-        summary = labels.get("discussion_summary") or " ".join(self._strip_leading_label(line) for line in lines[:3])
+        summary_points = self._point_summary(transcript or "\n".join(lines))
+        summary = labels.get("discussion_summary") or summary_points
         attachment = labels.get("supporting_attachment") or "No attachment linked. Add evidence before closure if required."
+        transcript_words = len(re.findall(r"\b\w+\b", transcript))
+        extraction_quality = (
+            f"Transcript captured: {transcript_words} word(s). "
+            "The transcript text is preserved verbatim. AI extraction is a review draft and must be approved."
+        )
 
         minutes = (
             f"Meeting: {title}\n"
-            f"Discussion summary: {summary}\n"
+            f"Discussion summary:\n{summary}\n"
             f"Decision: {decision}\n"
             f"Action required: {action}\n"
             f"Responsible person: {owner}\n"
@@ -79,6 +86,9 @@ class AIService:
             if item.status.lower() == "overdue"
         ]
         return {
+            "verbatim_transcript": transcript or "\n".join(lines),
+            "transcript_word_count": str(transcript_words),
+            "extraction_quality": extraction_quality,
             "discussion_summary": summary,
             "decision": decision,
             "action_required": action,
@@ -111,6 +121,42 @@ class AIService:
             "proposed_decisions": decisions,
             "review_required": ["User approval required before saving extracted actions."],
         }
+
+    def _point_summary(self, notes: str, max_points: int = 6) -> str:
+        units = self._sentence_units(notes)
+        if not units:
+            return "- No discussion text was provided."
+        points: list[str] = []
+        seen: set[str] = set()
+        priority_terms = ("critical", "urgent", "overdue", "delay", "decision", "action", "risk", "warning", "approve", "submit", "due")
+        prioritized = sorted(
+            units,
+            key=lambda item: (
+                not any(term in item.lower() for term in priority_terms),
+                units.index(item),
+            ),
+        )
+        for unit in prioritized:
+            clean = self._strip_leading_label(unit).strip()
+            key = clean.lower()
+            if clean and key not in seen:
+                points.append(f"- {clean}")
+                seen.add(key)
+            if len(points) >= max_points:
+                break
+        return "\n".join(points)
+
+    def _sentence_units(self, notes: str) -> list[str]:
+        chunks: list[str] = []
+        for raw_line in notes.splitlines():
+            line = raw_line.strip("- *\t ")
+            if not line:
+                continue
+            parts = [part.strip() for part in re.split(r"(?<=[.!?])\s+", line) if part.strip()]
+            chunks.extend(parts or [line])
+        if not chunks and notes.strip():
+            chunks = [part.strip() for part in re.split(r"(?<=[.!?])\s+", notes.strip()) if part.strip()]
+        return chunks
 
     def _parse_labeled_meeting_lines(self, lines: list[str]) -> dict[str, str]:
         aliases = {

@@ -268,7 +268,7 @@ def _privacy() -> list[ft.Control]:
 
 def _help() -> list[ft.Control]:
     return [
-        card([text("Run", 16, ft.FontWeight.BOLD), text("Use RUN_APP.bat from D:\\Eng. OLA. The web app opens on http://127.0.0.1:6194.", 13, color=PALETTE.muted)]),
+        card([text("Run", 16, ft.FontWeight.BOLD), text("Use run_web.bat for browser mode or run_desktop.bat for desktop mode from D:\\Eng. OLA. The web app opens on http://127.0.0.1:6194.", 13, color=PALETTE.muted)]),
         card([text("Data input", 16, ft.FontWeight.BOLD), text("Use templates/ CSV files for imports. Paste meeting notes into Meetings to extract actions, decisions, minutes, and follow-up drafts.", 13, color=PALETTE.muted)]),
         card([text("Reports", 16, ft.FontWeight.BOLD), text("Generate PMO reports from Home or More > Reports. Outputs are written to exports/.", 13, color=PALETTE.muted)]),
     ]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 
 import flet as ft
 
@@ -18,33 +19,51 @@ def meetings_view(repo: AppRepository, ai: AIService, refresh) -> ft.Control:
     exporter = ExportService(repo, repo.db_path.parents[1] / "exports")
     title = input_field("Meeting title")
     mtype = dropdown("Meeting type", ["PMO review", "Sector review", "Project progress meeting", "Executive meeting", "Recovery workshop", "Risk meeting", "Commercial meeting", "Personal meeting"])
-    notes = ft.TextField(label="Recording transcript / pasted meeting notes", multiline=True, min_lines=4, border_radius=14)
+    notes = ft.TextField(label="Verbatim transcript / pasted meeting notes", multiline=True, min_lines=8, border_radius=14)
+    transcript_path = input_field("Transcript .txt path")
     attachment = input_field("Supporting attachment reference")
     commitment_import_path = input_field("Commitments CSV/XLSX path")
     decision_import_path = input_field("Decisions CSV/XLSX path")
     milestone_import_path = input_field("Milestones CSV/XLSX path")
-    recording_state = ft.Text("Recording is stopped. Paste transcript or notes before extraction.", size=12, color=PALETTE.muted, no_wrap=False)
+    recording_state = ft.Text("Transcript mode is ready. Paste or import the complete transcript before extraction.", size=12, color=PALETTE.muted, no_wrap=False)
     import_status = ft.Text("", color=PALETTE.emerald, size=12, no_wrap=False)
     extracted = ft.Column(spacing=6)
     extracted_data: dict[str, str] = {}
     extracted_fields: dict[str, ft.TextField] = {}
+    capture_state = {"active": False}
 
     def create_meeting(e):
         repo.create_meeting(title.value, mtype.value, date.today().isoformat(), notes.value)
         refresh()
 
     def toggle_recording(e):
-        if "stopped" in recording_state.value:
-            recording_state.value = "Recording mode is active. Live microphone capture is prepared for device support; paste transcript here for this local version."
-            recording_state.color = PALETTE.red
-            e.control.text = "Stop recording"
+        if not capture_state["active"]:
+            capture_state["active"] = True
+            recording_state.value = "Transcript capture is active. Type or paste every spoken word here; the app preserves this text verbatim."
+            recording_state.color = PALETTE.amber
+            e.control.text = "Stop transcript capture"
             e.control.icon = ft.Icons.STOP_CIRCLE_OUTLINED
         else:
-            recording_state.value = "Recording stopped. Transcript is ready for reviewed extraction."
+            capture_state["active"] = False
+            recording_state.value = "Transcript capture stopped. Review the verbatim transcript before extraction."
             recording_state.color = PALETTE.emerald
-            e.control.text = "Start recording"
+            e.control.text = "Start transcript capture"
             e.control.icon = ft.Icons.MIC
         e.page.update()
+
+    def import_transcript(e):
+        try:
+            path = Path(transcript_path.value.strip())
+            if not path.exists() or path.suffix.lower() != ".txt":
+                raise ValueError("Enter a valid .txt transcript path.")
+            notes.value = path.read_text(encoding="utf-8")
+            recording_state.value = f"Transcript imported exactly from {path.name}. Review before extraction."
+            recording_state.color = PALETTE.emerald
+            e.page.update()
+        except Exception as exc:
+            recording_state.value = str(exc)
+            recording_state.color = PALETTE.red
+            e.page.update()
 
     def current_reviewed_extraction() -> dict[str, str]:
         reviewed = dict(extracted_data)
@@ -69,7 +88,9 @@ def meetings_view(repo: AppRepository, ai: AIService, refresh) -> ft.Control:
             text("Reviewed extraction draft. Nothing is saved or sent until Eng. Ola approves it.", 13, color=PALETTE.amber),
             card(
                 [
-                    output_box("Discussion summary", result["discussion_summary"], 3, "discussion_summary"),
+                    output_box("Verbatim transcript preserved", result["verbatim_transcript"], 8, "verbatim_transcript"),
+                    output_box("Extraction quality note", result["extraction_quality"], 2, "extraction_quality"),
+                    output_box("Discussion summary in points", result["discussion_summary"], 5, "discussion_summary"),
                     output_box("Decision", result["decision"], key="decision"),
                     output_box("Action required", result["action_required"], key="action_required"),
                     output_box("Responsible person", result["responsible_person"], key="responsible_person"),
@@ -291,13 +312,15 @@ def meetings_view(repo: AppRepository, ai: AIService, refresh) -> ft.Control:
                     mtype,
                     ft.Row(
                         [
-                            ft.ElevatedButton("Start recording", icon=ft.Icons.MIC, on_click=toggle_recording),
+                            ft.ElevatedButton("Start transcript capture", icon=ft.Icons.MIC, on_click=toggle_recording),
+                            ft.OutlinedButton("Import .txt transcript", icon=ft.Icons.UPLOAD_FILE, on_click=import_transcript),
                             ft.OutlinedButton("Create meeting", icon=ft.Icons.EVENT_NOTE, on_click=create_meeting),
                             ft.OutlinedButton("Extract and generate", icon=ft.Icons.AUTO_AWESOME, on_click=extract),
                         ],
                         wrap=True,
                     ),
                     recording_state,
+                    transcript_path,
                     notes,
                     attachment,
                     extracted,

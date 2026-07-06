@@ -25,12 +25,10 @@ Seeded credentials are still preserved for when login is restored:
 
 ## Run Modes
 
-- Launcher menu: `.\run.bat`
 - Web batch: `.\run_web.bat`
 - Desktop batch: `.\run_desktop.bat`
 - Web: `.\RUN_FLET_WEB.ps1`
 - Desktop: `.\RUN_FLET_DESKTOP.ps1`
-- Main launcher: `.\RUN_APP.bat`
 - Tests: `.\RUN_TESTS.ps1`
 - Command and handoff prompts: `prompt.md`
 

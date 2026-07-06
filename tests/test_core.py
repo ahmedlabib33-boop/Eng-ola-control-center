@@ -101,12 +101,18 @@ def test_meeting_commitment_decision_workflows(repo: AppRepository) -> None:
 
 def test_meeting_intelligence_generates_management_outputs(repo: AppRepository) -> None:
     ai = AIService(repo)
-    result = ai.extract_meeting_intelligence(
+    transcript = (
         "Decision approved for Building B01 recovery plan.\n"
-        "Action: submit revised recovery plan because the delay is critical.",
+        "Action: submit revised recovery plan because the delay is critical."
+    )
+    result = ai.extract_meeting_intelligence(
+        transcript,
         "Buildings sector review",
     )
+    assert result["verbatim_transcript"] == transcript
     assert result["discussion_summary"]
+    assert result["discussion_summary"].startswith("- ")
+    assert "Transcript captured:" in result["extraction_quality"]
     assert "Decision approved" in result["decision"]
     assert "submit revised recovery plan" in result["action_required"]
     assert result["responsible_person"] == "Project Manager"

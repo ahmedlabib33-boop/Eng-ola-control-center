@@ -70,16 +70,6 @@ Choose D:\Eng. OLA\.venv\Scripts\python.exe.
 
 ```powershell
 cd "D:\Eng. OLA"
-.\run.bat
-```
-
-```text
-Choose 1 for Web app.
-Choose 2 for Desktop app.
-```
-
-```powershell
-cd "D:\Eng. OLA"
 .\run_web.bat
 ```
 
@@ -95,11 +85,6 @@ cd "D:\Eng. OLA"
 ```powershell
 cd "D:\Eng. OLA"
 .\INSTALL_AND_RUN.ps1
-```
-
-```powershell
-cd "D:\Eng. OLA"
-.\RUN_APP.bat
 ```
 
 ```powershell
