@@ -10,17 +10,22 @@ from ola_360.components.ui import card, chip, text
 from ola_360.core.theme import PALETTE
 from ola_360.repositories.app_repository import AppRepository
 from ola_360.services.ai_service import AIService
+from ola_360.services.calendar_service import CalendarService
 from ola_360.services.export_service import ExportService
 from ola_360.services.import_service import ImportService
+from ola_360.services.speech_service import SpeechToTextService
 
 
 def meetings_view(repo: AppRepository, ai: AIService, refresh) -> ft.Control:
     importer = ImportService(repo)
     exporter = ExportService(repo, repo.db_path.parents[1] / "exports")
+    speech = SpeechToTextService()
+    calendar = CalendarService(repo)
     title = input_field("Meeting title")
     mtype = dropdown("Meeting type", ["PMO review", "Sector review", "Project progress meeting", "Executive meeting", "Recovery workshop", "Risk meeting", "Commercial meeting", "Personal meeting"])
     notes = ft.TextField(label="Verbatim transcript / pasted meeting notes", multiline=True, min_lines=8, border_radius=14)
     transcript_path = input_field("Transcript .txt path")
+    audio_path = input_field("Audio file path for real speech-to-text")
     attachment = input_field("Supporting attachment reference")
     commitment_import_path = input_field("Commitments CSV/XLSX path")
     decision_import_path = input_field("Decisions CSV/XLSX path")
@@ -63,6 +68,30 @@ def meetings_view(repo: AppRepository, ai: AIService, refresh) -> ft.Control:
         except Exception as exc:
             recording_state.value = str(exc)
             recording_state.color = PALETTE.red
+            e.page.update()
+
+    def transcribe_audio(e):
+        try:
+            result = speech.transcribe_file(audio_path.value.strip())
+            notes.value = result["transcript"]
+            repo.create_voice_capture("meeting", result["source_path"], result["transcript"], title.value or "Meeting transcript")
+            recording_state.value = f"Audio transcribed by {result['provider']}. Transcript preserved exactly from provider output."
+            recording_state.color = PALETTE.emerald
+            e.page.update()
+        except Exception as exc:
+            recording_state.value = str(exc)
+            recording_state.color = PALETTE.red
+            e.page.update()
+
+    def import_calendar(e):
+        try:
+            result = calendar.import_ics_from_env()
+            import_status.value = str(result["status"])
+            import_status.color = PALETTE.emerald if int(result["imported"]) else PALETTE.amber
+            refresh()
+        except Exception as exc:
+            import_status.value = str(exc)
+            import_status.color = PALETTE.red
             e.page.update()
 
     def current_reviewed_extraction() -> dict[str, str]:
@@ -313,13 +342,17 @@ def meetings_view(repo: AppRepository, ai: AIService, refresh) -> ft.Control:
                     ft.Row(
                         [
                             ft.ElevatedButton("Start transcript capture", icon=ft.Icons.MIC, on_click=toggle_recording),
+                            ft.OutlinedButton("Transcribe audio", icon=ft.Icons.RECORD_VOICE_OVER, on_click=transcribe_audio),
                             ft.OutlinedButton("Import .txt transcript", icon=ft.Icons.UPLOAD_FILE, on_click=import_transcript),
+                            ft.OutlinedButton("Import calendar", icon=ft.Icons.CALENDAR_MONTH, on_click=import_calendar),
                             ft.OutlinedButton("Create meeting", icon=ft.Icons.EVENT_NOTE, on_click=create_meeting),
                             ft.OutlinedButton("Extract and generate", icon=ft.Icons.AUTO_AWESOME, on_click=extract),
                         ],
                         wrap=True,
                     ),
                     recording_state,
+                    text(speech.status(), 12, color=PALETTE.muted),
+                    audio_path,
                     transcript_path,
                     notes,
                     attachment,

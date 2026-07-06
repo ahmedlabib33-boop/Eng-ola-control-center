@@ -11,6 +11,7 @@ from ola_360.repositories.app_repository import AppRepository
 from ola_360.services.auth_service import AuthService
 from ola_360.services.export_service import ExportService
 from ola_360.services.import_service import ImportService
+from ola_360.services.speech_service import SpeechToTextService
 from ola_360.services.state import AppState
 
 
@@ -26,6 +27,7 @@ def my_day_view(repo: AppRepository, auth: AuthService, state: AppState, refresh
 
     importer = ImportService(repo)
     exporter = ExportService(repo, repo.db_path.parents[1] / "exports")
+    speech = SpeechToTextService()
     title = input_field("Private task")
     category = dropdown("Category", ["Priority", "Family", "Call", "Errand", "Wellbeing", "Note"])
     due_date = input_field("Due date YYYY-MM-DD")
@@ -36,6 +38,7 @@ def my_day_view(repo: AppRepository, auth: AuthService, state: AppState, refresh
     event_import_path = input_field("Personal events CSV/XLSX path")
     note_title = input_field("Private note title")
     note_body = ft.TextField(label="Private note / idea", multiline=True, min_lines=3, border_radius=14)
+    voice_path = input_field("Voice thought audio file path")
     note_import_path = input_field("Private notes CSV/XLSX path")
     wellbeing_date = input_field("Check-in date YYYY-MM-DD")
     water_done = ft.Checkbox(label="Water reminder completed")
@@ -79,6 +82,21 @@ def my_day_view(repo: AppRepository, auth: AuthService, state: AppState, refresh
             repo.create_private_note(note_title.value, note_body.value or "")
             note_title.value = ""
             note_body.value = ""
+            refresh()
+        except Exception as exc:
+            status.value = str(exc)
+            status.color = PALETTE.red
+            e.page.update()
+
+    def transcribe_voice_note(e):
+        try:
+            result = speech.transcribe_file(voice_path.value.strip())
+            repo.create_voice_capture("private_note", result["source_path"], result["transcript"], "My Day - Private")
+            repo.create_private_note(note_title.value or "Voice quick capture", result["transcript"])
+            voice_path.value = ""
+            note_title.value = ""
+            status.value = "Voice quick capture transcribed and saved as a private note."
+            status.color = PALETTE.emerald
             refresh()
         except Exception as exc:
             status.value = str(exc)
@@ -213,7 +231,18 @@ def my_day_view(repo: AppRepository, auth: AuthService, state: AppState, refresh
             card([text("Today and upcoming personal reminders", 17, ft.FontWeight.BOLD), *[text(f"{item.event_date} | {item.title}", 14) for item in events[:3]]], accent=PALETTE.blue),
             ft.ExpansionTile(title=text("Add private item", 16, ft.FontWeight.BOLD), controls=[title, category, due_date, ft.ElevatedButton("Save private item", icon=ft.Icons.SAVE, on_click=add_task)]),
             ft.ExpansionTile(title=text("Appointments and family reminders", 16, ft.FontWeight.BOLD), controls=[event_title, event_category, event_date, ft.ElevatedButton("Save personal reminder", icon=ft.Icons.EVENT, on_click=add_event), *event_cards]),
-            ft.ExpansionTile(title=text("Private notes and ideas", 16, ft.FontWeight.BOLD), controls=[note_title, note_body, ft.ElevatedButton("Save private note", icon=ft.Icons.NOTE_ADD, on_click=add_note), *note_cards]),
+            ft.ExpansionTile(
+                title=text("Private notes and ideas", 16, ft.FontWeight.BOLD),
+                controls=[
+                    note_title,
+                    note_body,
+                    ft.ElevatedButton("Save private note", icon=ft.Icons.NOTE_ADD, on_click=add_note),
+                    text(speech.status(), 12, color=PALETTE.muted),
+                    voice_path,
+                    ft.OutlinedButton("Transcribe voice thought", icon=ft.Icons.RECORD_VOICE_OVER, on_click=transcribe_voice_note),
+                    *note_cards,
+                ],
+            ),
             ft.ExpansionTile(
                 title=text("Wellbeing check-in", 16, ft.FontWeight.BOLD),
                 controls=[

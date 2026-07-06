@@ -19,3 +19,16 @@
 - Private My Day records are excluded from organizational reports and normal AI answers.
 - English and Arabic localization contracts.
 - Dark Intelligence theme with future light-mode support.
+## Current Applied Feature Upgrade
+
+- Real audio-file speech-to-text integration through configured provider credentials.
+- Portfolio-wide risk rollup by project status.
+- Predictive early-warning signals from trend and risk-language indicators.
+- Automatic escalation nudge drafts for overdue commitments.
+- Weekly/monthly executive digest generation in Markdown and PDF.
+- Decision audit trail with linked meeting source when available.
+- Email, Teams, and WhatsApp delivery integrations with safe draft fallback.
+- Voice quick capture routed into My Day private notes.
+- Delegate role records for Deputy, PMO Analyst, and PMO Admin.
+- Natural-language query over stored PMO records.
+- Calendar import from configured ICS feed.

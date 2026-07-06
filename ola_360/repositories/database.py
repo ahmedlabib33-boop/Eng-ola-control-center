@@ -216,6 +216,36 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     entity_id INTEGER,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS notification_deliveries (
+    id INTEGER PRIMARY KEY,
+    channel TEXT NOT NULL,
+    recipient TEXT DEFAULT '',
+    subject TEXT NOT NULL,
+    body TEXT NOT NULL,
+    status TEXT NOT NULL,
+    provider_response TEXT DEFAULT '',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS calendar_events (
+    id INTEGER PRIMARY KEY,
+    external_id TEXT UNIQUE,
+    title TEXT NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT DEFAULT '',
+    source TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS voice_captures (
+    id INTEGER PRIMARY KEY,
+    scope TEXT NOT NULL,
+    source_path TEXT NOT NULL,
+    transcript TEXT NOT NULL,
+    routed_to TEXT DEFAULT '',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 

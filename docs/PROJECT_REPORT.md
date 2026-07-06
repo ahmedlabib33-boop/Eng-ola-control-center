@@ -160,6 +160,7 @@ cd "D:\Eng. OLA"
 
 The Meeting and Commitment Center supports:
 
+- Real speech-to-text integration for audio files when `OPENAI_API_KEY` is configured
 - Verbatim transcript paste
 - `.txt` transcript import
 - Exact transcript preservation
@@ -183,9 +184,44 @@ The Meeting and Commitment Center supports:
 Important limitation:
 
 ```text
-The current Flet version has no built-in live microphone speech-to-text control.
-The app does not claim fake 100% audio recording.
-It preserves pasted/imported transcript text exactly and generates reviewed outputs from that transcript.
+The current Flet version has no built-in live microphone control.
+The app does not claim fake browser microphone recording.
+It transcribes audio files with a configured speech-to-text provider, preserves pasted/imported/provider transcript text exactly, and generates reviewed outputs from that transcript.
+```
+
+## Added Executive Capabilities
+
+```text
+Portfolio-wide risk rollup
+Predictive early-warning signals from project update trends
+Automatic overdue escalation nudges
+Weekly and monthly executive digest generation as Markdown and PDF
+Decision audit trail linked to meeting source where available
+Email, Teams, and WhatsApp notification delivery with draft fallback
+Voice quick capture for private notes using the configured speech-to-text provider
+Role/delegate records for Deputy, PMO Analyst, and PMO Admin
+Natural-language query over stored warnings, commitments, and decisions
+Calendar import from ICS feed through OLA_CALENDAR_ICS_URL
+```
+
+## External Integration Configuration
+
+No API keys are hard-coded. External integrations activate only when these environment variables are configured:
+
+```text
+OPENAI_API_KEY                 Real speech-to-text transcription
+OLA_STT_PROVIDER               Optional, defaults to openai
+OLA_STT_MODEL                  Optional, defaults to whisper-1
+OLA_CALENDAR_ICS_URL           Outlook/Google/public ICS calendar import
+OLA_SMTP_HOST                  Email notifications
+OLA_SMTP_PORT                  Email notifications, defaults to 587
+OLA_SMTP_USER                  Email login
+OLA_SMTP_PASSWORD              Email login
+OLA_SMTP_FROM                  Email sender
+OLA_TEAMS_WEBHOOK_URL          Teams notifications
+TWILIO_ACCOUNT_SID             WhatsApp notifications
+TWILIO_AUTH_TOKEN              WhatsApp notifications
+TWILIO_WHATSAPP_FROM           WhatsApp sender
 ```
 
 ## Latest Verification
@@ -193,8 +229,8 @@ It preserves pasted/imported transcript text exactly and generates reviewed outp
 Last local checks completed successfully:
 
 ```text
-Tests: 23 passed
-Syntax: syntax ok: 39 files
+Tests: 27 passed
+Syntax: syntax ok: 46 files
 ASGI import: FastAPI True
 Transcript smoke test: exact transcript preserved = True
 Hugging Face Space status: Running

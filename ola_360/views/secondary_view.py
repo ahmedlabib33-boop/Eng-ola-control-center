@@ -3,8 +3,11 @@ from __future__ import annotations
 import flet as ft
 
 from ola_360.components.ui import card, chip, empty_state, text
+from ola_360.core.security import hash_password
 from ola_360.core.theme import PALETTE
 from ola_360.repositories.app_repository import AppRepository
+from ola_360.services.channel_service import ChannelService
+from ola_360.services.digest_service import DigestService
 from ola_360.services.premium_service import PremiumService
 from ola_360.services.report_service import ReportService
 from ola_360.services.state import AppState
@@ -54,7 +57,7 @@ def _content(page: str, repo: AppRepository, state: AppState, notifications: lis
     if page == "commitments":
         return _commitments(repo, refresh)
     if page == "notifications":
-        return _notifications(notifications)
+        return _notifications(repo, notifications)
     if page == "intervention":
         return _intervention(repo, refresh)
     if page == "timeline":
@@ -64,7 +67,7 @@ def _content(page: str, repo: AppRepository, state: AppState, notifications: lis
     if page == "shutdown":
         return _shutdown(repo)
     if page == "settings":
-        return _settings(state)
+        return _settings(repo, state)
     if page == "privacy":
         return _privacy()
     if page == "help":
@@ -162,12 +165,23 @@ def _shutdown(repo: AppRepository) -> list[ft.Control]:
 
 def _reports(repo: AppRepository) -> list[ft.Control]:
     reporter = ReportService(repo, repo.db_path.parents[1] / "exports")
+    digests = DigestService(repo, repo.db_path.parents[1] / "exports")
     status = ft.Text("", size=12, color=PALETTE.emerald, no_wrap=False)
 
     def generate(e):
         try:
             output = reporter.build_executive_report()
             status.value = f"Generated: {output}"
+            status.color = PALETTE.emerald
+        except Exception as exc:
+            status.value = str(exc)
+            status.color = PALETTE.red
+        e.page.update()
+
+    def generate_digest(period: str, e):
+        try:
+            output = digests.build_digest(period)
+            status.value = f"{period.title()} digest generated: {output['markdown']} and {output['pdf']}"
             status.color = PALETTE.emerald
         except Exception as exc:
             status.value = str(exc)
@@ -181,6 +195,13 @@ def _reports(repo: AppRepository) -> list[ft.Control]:
                 text("Creates a Markdown report from warnings, decisions, commitments, meetings, project updates, comments, and attachments.", 13, color=PALETTE.muted),
                 text("Private My Day records are excluded.", 13, color=PALETTE.amber),
                 ft.ElevatedButton("Generate report", icon=ft.Icons.DESCRIPTION_OUTLINED, on_click=generate),
+                ft.Row(
+                    [
+                        ft.OutlinedButton("Weekly digest PDF", icon=ft.Icons.PICTURE_AS_PDF, on_click=lambda e: generate_digest("weekly", e)),
+                        ft.OutlinedButton("Monthly digest PDF", icon=ft.Icons.PICTURE_AS_PDF, on_click=lambda e: generate_digest("monthly", e)),
+                    ],
+                    wrap=True,
+                ),
                 status,
             ],
             accent=PALETTE.bronze,
@@ -190,8 +211,22 @@ def _reports(repo: AppRepository) -> list[ft.Control]:
 
 def _decisions(repo: AppRepository, refresh) -> list[ft.Control]:
     items = repo.decisions()
+    audit_rows = repo.decision_audit()
+    audit_controls = [
+        card(
+            [
+                text("Decision audit trail", 18, ft.FontWeight.BOLD),
+                text("Searchable governance log with decision, project, timestamp, and linked meeting source.", 13, color=PALETTE.muted),
+                *[
+                    text(f"#{row['id']} | {row['created_at']} | {row['title']} | {row['project']} | Source: {row['meeting_title']}", 12)
+                    for row in audit_rows[:12]
+                ],
+            ],
+            accent=PALETTE.bronze,
+        )
+    ]
     if not items:
-        return [empty_state("No decisions", "Create decisions from Meetings or import the decisions template.")]
+        return [empty_state("No decisions", "Create decisions from Meetings or import the decisions template."), *audit_controls]
     cards: list[ft.Control] = []
     for item in items:
         cards.append(
@@ -210,7 +245,7 @@ def _decisions(repo: AppRepository, refresh) -> list[ft.Control]:
                 accent=PALETTE.blue,
             )
         )
-    return cards
+    return [*audit_controls, *cards]
 
 
 def _commitments(repo: AppRepository, refresh) -> list[ft.Control]:
@@ -239,16 +274,80 @@ def _commitments(repo: AppRepository, refresh) -> list[ft.Control]:
     return cards
 
 
-def _notifications(notifications: list[str]) -> list[ft.Control]:
+def _notifications(repo: AppRepository, notifications: list[str]) -> list[ft.Control]:
+    channel = ChannelService(repo)
+    recipient = ft.TextField(label="Email or WhatsApp recipient", border_radius=12)
+    subject = ft.TextField(label="Subject", value="OLA 360 critical alert", border_radius=12)
+    body = ft.TextField(label="Message draft", value="\n".join(notifications[:5]), multiline=True, min_lines=5, border_radius=12)
+    status = ft.Text("", size=12, color=PALETTE.emerald, no_wrap=False)
+
+    def send(kind: str, e):
+        try:
+            if kind == "email":
+                result = channel.send_email(recipient.value, subject.value, body.value)
+            elif kind == "teams":
+                result = channel.send_teams(subject.value, body.value)
+            else:
+                result = channel.send_whatsapp(recipient.value, subject.value, body.value)
+            status.value = f"{result['channel']} {result['status']}: {result['provider_response']}"
+            status.color = PALETTE.emerald if result["status"] == "sent" else PALETTE.amber
+        except Exception as exc:
+            status.value = str(exc)
+            status.color = PALETTE.red
+        e.page.update()
+
+    delivery_rows = repo.notification_deliveries()
+    controls = [
+        card(
+            [
+                text("Real-channel notification center", 18, ft.FontWeight.BOLD),
+                text("Email, Teams, and WhatsApp send only when provider credentials are configured. Otherwise a draft delivery is logged.", 13, color=PALETTE.muted),
+                recipient,
+                subject,
+                body,
+                ft.Row(
+                    [
+                        ft.OutlinedButton("Send email", icon=ft.Icons.EMAIL, on_click=lambda e: send("email", e)),
+                        ft.OutlinedButton("Send Teams", icon=ft.Icons.GROUP, on_click=lambda e: send("teams", e)),
+                        ft.OutlinedButton("Send WhatsApp", icon=ft.Icons.CHAT, on_click=lambda e: send("whatsapp", e)),
+                    ],
+                    wrap=True,
+                ),
+                status,
+            ],
+            accent=PALETTE.blue,
+        )
+    ]
     if not notifications:
-        return [empty_state("No notifications", "Critical warnings, due decisions, and stale updates will appear here.")]
-    return [card([text(item, 14)], accent=PALETTE.amber) for item in notifications]
+        controls.append(empty_state("No notifications", "Critical warnings, due decisions, and stale updates will appear here."))
+    else:
+        controls.extend([card([text(item, 14)], accent=PALETTE.amber) for item in notifications])
+    if delivery_rows:
+        controls.append(card([text("Recent channel deliveries", 16, ft.FontWeight.BOLD), *[text(f"{row['created_at']} | {row['channel']} | {row['status']} | {row['subject']}", 12) for row in delivery_rows[:8]]], accent=PALETTE.border))
+    return controls
 
 
-def _settings(state: AppState) -> list[ft.Control]:
+def _settings(repo: AppRepository, state: AppState) -> list[ft.Control]:
+    name = ft.TextField(label="Delegate name", border_radius=12)
+    email = ft.TextField(label="Delegate email", border_radius=12)
+    role = ft.Dropdown(label="Role", value="Deputy", options=[ft.dropdown.Option("Deputy"), ft.dropdown.Option("PMO Analyst"), ft.dropdown.Option("PMO Admin")], border_radius=12)
+    password = ft.TextField(label="Temporary password", password=True, can_reveal_password=True, border_radius=12)
+    status = ft.Text("", size=12, color=PALETTE.emerald)
+
+    def save_delegate(e):
+        try:
+            repo.create_user(name.value, email.value, hash_password(password.value or "ChangeMe123!"), role.value)
+            status.value = f"Delegate access saved for {email.value} as {role.value}."
+            status.color = PALETTE.emerald
+        except Exception as exc:
+            status.value = str(exc)
+            status.color = PALETTE.red
+        e.page.update()
+
     return [
         card([text("Mode", 16, ft.FontWeight.BOLD), ft.Row([chip(state.theme_mode.title(), PALETTE.plum), chip(state.language.upper(), PALETTE.blue)], wrap=True)]),
-        card([text("Authentication", 16, ft.FontWeight.BOLD), text("Login is disabled for the current local build. The app opens directly as Eng. Ola.", 13, color=PALETTE.muted)]),
+        card([text("Authentication", 16, ft.FontWeight.BOLD), text("Login is disabled for the current local build. Role records are ready for re-enabling delegated access.", 13, color=PALETTE.muted)]),
+        card([text("Delegate access", 16, ft.FontWeight.BOLD), name, email, role, password, ft.OutlinedButton("Save delegate role", icon=ft.Icons.ADMIN_PANEL_SETTINGS, on_click=save_delegate), status], accent=PALETTE.plum),
         card([text("Storage", 16, ft.FontWeight.BOLD), text("Local SQLite data is stored in the app data folder and templates live in templates/.", 13, color=PALETTE.muted)]),
     ]
 

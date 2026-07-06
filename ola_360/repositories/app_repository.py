@@ -39,6 +39,22 @@ class AppRepository:
         with self._conn() as conn:
             return conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
 
+    def create_user(self, name: str, email: str, password_hash: str, role: str) -> int:
+        if role not in {"Executive", "PMO Admin", "Deputy", "PMO Analyst"}:
+            raise ValueError("Unsupported role")
+        with self._conn() as conn:
+            conn.execute("INSERT OR IGNORE INTO roles(name) VALUES (?)", (role,))
+            cur = conn.execute(
+                """
+                INSERT INTO users(name, email, password_hash, role)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(email) DO UPDATE SET name=excluded.name, role=excluded.role
+                """,
+                (name, email, password_hash, role),
+            )
+            user = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+            return int(user["id"] if user else cur.lastrowid)
+
     def sectors(self) -> list[str]:
         with self._conn() as conn:
             rows = conn.execute("SELECT name FROM sectors ORDER BY name").fetchall()
@@ -364,6 +380,33 @@ class AppRepository:
             rows = conn.execute("SELECT id, title, project, status, due_date FROM decisions ORDER BY due_date").fetchall()
         return [Decision(**dict(row)) for row in rows]
 
+    def decision_audit(self, search: str = "") -> list[dict[str, str]]:
+        with self._conn() as conn:
+            rows = conn.execute(
+                """
+                SELECT decisions.id, decisions.title, decisions.project, decisions.status, decisions.due_date,
+                       decisions.created_at, meetings.title AS meeting_title, meetings.meeting_date
+                FROM decisions
+                LEFT JOIN meetings ON meetings.id = decisions.source_meeting_id
+                WHERE ? = '' OR decisions.title LIKE ? OR decisions.project LIKE ? OR COALESCE(meetings.title, '') LIKE ?
+                ORDER BY decisions.created_at DESC, decisions.id DESC
+                """,
+                (search, f"%{search}%", f"%{search}%", f"%{search}%"),
+            ).fetchall()
+        return [
+            {
+                "id": str(row["id"]),
+                "title": str(row["title"]),
+                "project": str(row["project"]),
+                "status": str(row["status"]),
+                "due_date": str(row["due_date"]),
+                "created_at": str(row["created_at"]),
+                "meeting_title": str(row["meeting_title"] or "No linked meeting"),
+                "meeting_date": str(row["meeting_date"] or ""),
+            }
+            for row in rows
+        ]
+
     def create_decision(self, title: str, project: str, due_date: str) -> int:
         with self._conn() as conn:
             cur = conn.execute(
@@ -651,6 +694,72 @@ class AppRepository:
     def notifications(self) -> list[sqlite3.Row]:
         with self._conn() as conn:
             return conn.execute("SELECT * FROM notifications ORDER BY created_at DESC").fetchall()
+
+    def create_notification_delivery(self, channel: str, recipient: str, subject: str, body: str, status: str, provider_response: str) -> int:
+        with self._conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO notification_deliveries(channel, recipient, subject, body, status, provider_response)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (channel, recipient, subject, body, status, provider_response),
+            )
+            conn.execute("INSERT INTO audit_logs(actor, action, entity_type, entity_id) VALUES (?, ?, ?, ?)", ("Eng. Ola", f"notify:{channel}:{status}", "notification_delivery", cur.lastrowid))
+            return int(cur.lastrowid)
+
+    def notification_deliveries(self, limit: int = 20) -> list[dict[str, str]]:
+        with self._conn() as conn:
+            rows = conn.execute(
+                """
+                SELECT channel, recipient, subject, status, provider_response, created_at
+                FROM notification_deliveries
+                ORDER BY created_at DESC, id DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def create_calendar_event(self, external_id: str, title: str, start_time: str, end_time: str, source: str) -> int:
+        with self._conn() as conn:
+            conn.execute(
+                """
+                INSERT INTO calendar_events(external_id, title, start_time, end_time, source)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(external_id) DO UPDATE SET title=excluded.title, start_time=excluded.start_time, end_time=excluded.end_time, source=excluded.source
+                """,
+                (external_id, title, start_time, end_time, source),
+            )
+            row = conn.execute("SELECT id FROM calendar_events WHERE external_id = ?", (external_id,)).fetchone()
+            return int(row["id"])
+
+    def calendar_events(self, limit: int = 20) -> list[dict[str, str]]:
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT title, start_time, end_time, source FROM calendar_events ORDER BY start_time LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def create_voice_capture(self, scope: str, source_path: str, transcript: str, routed_to: str = "") -> int:
+        with self._conn() as conn:
+            cur = conn.execute(
+                "INSERT INTO voice_captures(scope, source_path, transcript, routed_to) VALUES (?, ?, ?, ?)",
+                (scope, source_path, transcript, routed_to),
+            )
+            conn.execute("INSERT INTO audit_logs(actor, action, entity_type, entity_id) VALUES (?, ?, ?, ?)", ("Eng. Ola", "voice-capture", scope, cur.lastrowid))
+            return int(cur.lastrowid)
+
+    def voice_captures(self, scope: str = "") -> list[dict[str, str]]:
+        query = "SELECT id, scope, source_path, transcript, routed_to, created_at FROM voice_captures"
+        params: list[Any] = []
+        if scope:
+            query += " WHERE scope = ?"
+            params.append(scope)
+        query += " ORDER BY created_at DESC, id DESC"
+        with self._conn() as conn:
+            rows = conn.execute(query, params).fetchall()
+        return [dict(row) for row in rows]
 
     def audit_logs(self, limit: int = 20) -> list[dict[str, str]]:
         with self._conn() as conn:

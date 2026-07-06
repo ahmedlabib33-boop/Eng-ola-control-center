@@ -13,11 +13,18 @@ from ola_360.repositories.database import init_db
 from ola_360.services.ai_service import AIService
 from ola_360.services.auth_service import AuthService
 from ola_360.services.brief_service import MorningBriefService
+from ola_360.services.calendar_service import CalendarService
+from ola_360.services.channel_service import ChannelService
+from ola_360.services.digest_service import DigestService
+from ola_360.services.escalation_service import EscalationService
 from ola_360.services.export_service import ExportService
 from ola_360.services.import_service import ImportService
 from ola_360.services.notification_service import NotificationService
+from ola_360.services.portfolio_service import PortfolioService
 from ola_360.services.premium_service import PremiumService
+from ola_360.services.query_service import NaturalQueryService
 from ola_360.services.report_service import ReportService
+from ola_360.services.speech_service import SpeechToTextService
 
 
 @pytest.fixture()
@@ -122,6 +129,14 @@ def test_meeting_intelligence_generates_management_outputs(repo: AppRepository) 
     assert "Next" not in result["action_register"]
 
 
+def test_speech_service_requires_real_provider_configuration(tmp_path: Path) -> None:
+    audio = tmp_path / "meeting.wav"
+    audio.write_bytes(b"not-a-real-wave-but-existing-file")
+    service = SpeechToTextService()
+    with pytest.raises(ValueError, match="OPENAI_API_KEY"):
+        service.transcribe_file(str(audio))
+
+
 def test_meeting_intelligence_extracts_review_labels(repo: AppRepository) -> None:
     ai = AIService(repo)
     result = ai.extract_meeting_intelligence(
@@ -163,6 +178,66 @@ def test_ai_fallback_excludes_private_data(repo: AppRepository) -> None:
     response = ai.answer("What requires my attention today?")
     assert "Private My Day records are excluded" in response["answer"]
     assert response["sources"] == "Local SQLite records"
+
+
+def test_natural_language_query_uses_stored_data(repo: AppRepository) -> None:
+    answer = NaturalQueryService(repo).answer("Show me all overdue actions related to Configured PMO Project")
+    assert "Submit recovery-plan evidence" in answer
+    assert "Project Manager" in answer
+
+
+def test_portfolio_rollup_predictive_and_escalation(repo: AppRepository) -> None:
+    repo.create_project_update(
+        {
+            "project": "Risk Trend Project",
+            "sector": "Buildings",
+            "update_date": "2099-01-01",
+            "progress": "50",
+            "summary": "Baseline",
+            "issues": "Procurement risk",
+        }
+    )
+    repo.create_project_update(
+        {
+            "project": "Risk Trend Project",
+            "sector": "Buildings",
+            "update_date": "2099-01-02",
+            "progress": "50",
+            "summary": "Flat progress",
+            "issues": "Procurement delay risk remains",
+        }
+    )
+    rollup = PortfolioService(repo).rollup()
+    flags = PortfolioService(repo).predictive_flags()
+    escalations = EscalationService(repo).overdue_escalations()
+    assert rollup["red_projects"] >= 1
+    assert any(item["project"] == "Risk Trend Project" for item in flags)
+    assert any("suggested_nudge" in item for item in escalations)
+
+
+def test_calendar_channel_digest_decision_audit_and_voice_capture(repo: AppRepository, tmp_path: Path) -> None:
+    ics = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:meeting-1
+SUMMARY:Executive calendar review
+DTSTART:20990101T090000Z
+DTEND:20990101T100000Z
+END:VEVENT
+END:VCALENDAR
+"""
+    calendar_result = CalendarService(repo).import_ics(ics, "unit-test")
+    digest = DigestService(repo, tmp_path / "exports").build_digest("weekly")
+    channel_result = ChannelService(repo).send_email("leader@example.com", "Subject", "Body")
+    capture_id = repo.create_voice_capture("private_note", "voice.wav", "Call project director", "My Day")
+    audit = repo.decision_audit()
+
+    assert calendar_result["imported"] == 1
+    assert any(item.title == "Executive calendar review" for item in repo.meetings())
+    assert digest["markdown"].exists()
+    assert digest["pdf"].exists()
+    assert channel_result["status"] == "draft"
+    assert capture_id > 0
+    assert audit
 
 
 def test_private_data_isolation(repo: AppRepository) -> None:

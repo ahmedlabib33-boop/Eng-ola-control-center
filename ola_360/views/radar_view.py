@@ -10,12 +10,20 @@ from ola_360.core.theme import PALETTE
 from ola_360.repositories.app_repository import AppRepository
 from ola_360.services.export_service import ExportService
 from ola_360.services.import_service import ImportService
+from ola_360.services.portfolio_service import PortfolioService
 from ola_360.services.state import AppState
 
 
 def radar_view(repo: AppRepository, state: AppState, refresh) -> ft.Control:
     importer = ImportService(repo)
     exporter = ExportService(repo, repo.db_path.parents[1] / "exports")
+    portfolio = PortfolioService(repo)
+    rollup = portfolio.rollup()
+    predictive = portfolio.predictive_flags()
+    predictive_controls = [
+        card([text(item["project"], 15, ft.FontWeight.BOLD), text(item["signal"], 13), text(item["basis"], 12, color=PALETTE.muted)], accent=PALETTE.amber)
+        for item in predictive
+    ] or [text("No predictive risk signal is currently visible from stored project updates.", 13, color=PALETTE.muted)]
     sector = dropdown("Sector", ["All", "Buildings", "Tunnels", "Infrastructure", "Roads", "Other"], state.selected_sector)
     severity = dropdown("Severity", ["All", "Information", "Watch", "Intervention", "Critical"], state.warning_severity)
     entry_category = dropdown("Category", ["Schedule", "Progress", "Engineering", "Procurement", "Commercial", "Risk", "Governance", "Data quality", "Meeting commitment", "Management decision"])
@@ -287,6 +295,31 @@ def radar_view(repo: AppRepository, state: AppState, refresh) -> ft.Control:
         spacing=12,
         controls=[
             text("Early-Warning Radar", 24, ft.FontWeight.BOLD),
+            ft.ExpansionTile(
+                title=text("Portfolio-wide risk rollup", 16, ft.FontWeight.BOLD),
+                controls=[
+                    ft.Row([chip(f"Red projects {rollup['red_projects']}", PALETTE.red), chip(f"Amber projects {rollup['amber_projects']}", PALETTE.amber), chip(f"Green projects {rollup['green_projects']}", PALETTE.emerald)], wrap=True),
+                    *[
+                        ft.Container(
+                            padding=10,
+                            border_radius=12,
+                            bgcolor=PALETTE.panel_2,
+                            content=ft.Column(
+                                [
+                                    ft.Row([text(str(row["project"]), 14, ft.FontWeight.BOLD), chip(str(row["status"]), PALETTE.red if row["status"] == "Red" else PALETTE.amber if row["status"] == "Amber" else PALETTE.emerald)], wrap=True),
+                                    text(f"Sector: {row['sector']} | Critical: {row['critical']} | Watch: {row['watch']} | Overdue: {row['overdue']} | Progress: {row['latest_progress'] if row['latest_progress'] is not None else 'n/a'}", 12, color=PALETTE.muted),
+                                ],
+                                tight=True,
+                            ),
+                        )
+                        for row in rollup["projects"][:8]
+                    ],
+                ],
+            ),
+            ft.ExpansionTile(
+                title=text("Predictive early-warning signals", 16, ft.FontWeight.BOLD),
+                controls=predictive_controls,
+            ),
             ft.Row([sector, severity, ft.IconButton(ft.Icons.FILTER_ALT, on_click=apply_filters)], vertical_alignment=ft.CrossAxisAlignment.END),
             ft.ExpansionTile(
                 title=text("Create reviewed warning", 16, ft.FontWeight.BOLD),

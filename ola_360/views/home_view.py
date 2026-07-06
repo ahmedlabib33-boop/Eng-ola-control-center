@@ -22,6 +22,18 @@ def home_view(repo: AppRepository, brief_service: MorningBriefService, offline_s
     priority_cards = [warning_card(item) for item in brief["warnings"]]
     if not priority_cards:
         priority_cards = [card([text("No critical stored warning", 16, ft.FontWeight.BOLD), text("The brief is generated from local SQLite records.", 13, color=PALETTE.muted)])]
+    escalation_cards = [
+        card(
+            [
+                ft.Row([chip(f"Level {item['level']}", PALETTE.red), chip(f"{item['days_overdue']} days overdue", PALETTE.amber)], wrap=True),
+                text(str(item["title"]), 15, ft.FontWeight.BOLD),
+                text(f"Owner: {item['owner']} | Project: {item['project']}", 12, color=PALETTE.muted),
+                ft.TextField(label="Suggested nudge draft", value=str(item["suggested_nudge"]), multiline=True, min_lines=4, border_radius=12),
+            ],
+            accent=PALETTE.red,
+        )
+        for item in brief["escalations"]
+    ]
     focus_cards: list[ft.Control] = [
         card(
             [
@@ -86,6 +98,21 @@ def home_view(repo: AppRepository, brief_service: MorningBriefService, offline_s
             ),
             card(
                 [
+                    text("Portfolio risk rollup", 16, ft.FontWeight.BOLD),
+                    ft.Row(
+                        [
+                            chip(f"Red {brief['portfolio']['red_projects']}", PALETTE.red),
+                            chip(f"Amber {brief['portfolio']['amber_projects']}", PALETTE.amber),
+                            chip(f"Green {brief['portfolio']['green_projects']}", PALETTE.emerald),
+                        ],
+                        wrap=True,
+                    ),
+                    text(f"Open warnings: {brief['portfolio']['open_warnings']} | Open commitments: {brief['portfolio']['open_commitments']}", 13, color=PALETTE.muted),
+                ],
+                accent=PALETTE.bronze,
+            ),
+            card(
+                [
                     text("Quick actions", 16, ft.FontWeight.BOLD),
                     ft.Row(
                         [
@@ -105,6 +132,8 @@ def home_view(repo: AppRepository, brief_service: MorningBriefService, offline_s
             *focus_cards,
             text("Priority cards", 18, ft.FontWeight.BOLD),
             *priority_cards,
+            text("Escalation nudges", 18, ft.FontWeight.BOLD),
+            *(escalation_cards or [card([text("No overdue escalation nudge is due.", 13, color=PALETTE.muted)], accent=PALETTE.border)]),
             card(
                 [
                     text("Today", 16, ft.FontWeight.BOLD),

@@ -4,6 +4,7 @@ import re
 from datetime import date, datetime, timedelta
 
 from ola_360.repositories.app_repository import AppRepository
+from ola_360.services.query_service import NaturalQueryService
 
 
 class AIService:
@@ -14,7 +15,9 @@ class AIService:
         context = self.repo.ai_records_context(include_private=include_private)
         prompt_lower = prompt.lower()
         facts: list[str] = []
-        if "overdue" in prompt_lower or "attention" in prompt_lower or "today" in prompt_lower:
+        if any(term in prompt_lower for term in ["show me", "list", "related to", "project ", "overdue actions"]):
+            facts.append(NaturalQueryService(self.repo).answer(prompt))
+        elif "overdue" in prompt_lower or "attention" in prompt_lower or "today" in prompt_lower:
             overdue = [c for c in context["commitments"] if c["status"] == "Overdue"]
             critical = [w for w in context["warnings"] if w["severity"] == "Critical" and w["status"] != "Closed"]
             facts.append(f"{len(critical)} critical warning(s) and {len(overdue)} overdue commitment(s) are stored.")
