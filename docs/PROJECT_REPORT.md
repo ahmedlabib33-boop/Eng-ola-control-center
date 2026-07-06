@@ -45,15 +45,27 @@ D:\Eng. OLA
 
 ## Current Deployment Status
 
-The project is deploy-ready, but the public deployment is not completed yet because Render asked for a credit card.
+The project is deployed on Hugging Face Spaces with a permanent secure HTTPS URL.
 
 Current status:
 
 ```text
 GitHub repo: synced
 Render deployment: prepared, not completed because card was required
-Hugging Face Spaces deployment: prepared as the no-card free option
+Hugging Face Spaces deployment: live
 Streamlit Cloud: compatibility notice only, not the full app
+```
+
+Permanent app URL:
+
+```text
+https://ahmedbeba-beba.hf.space/
+```
+
+Hugging Face Space page:
+
+```text
+https://huggingface.co/spaces/ahmedbeba/beba
 ```
 
 ## Main Deployment Option
@@ -109,10 +121,10 @@ $env:HF_TOKEN="hf_your_token_here"
 .\DEPLOY_HUGGINGFACE_SPACE.ps1 -SpaceId "YOUR_HF_USERNAME/ola-360"
 ```
 
-Expected public URL after deployment:
+Public URL:
 
 ```text
-https://huggingface.co/spaces/YOUR_HF_USERNAME/ola-360
+https://ahmedbeba-beba.hf.space/
 ```
 
 ## Local Run
@@ -185,19 +197,20 @@ Tests: 23 passed
 Syntax: syntax ok: 39 files
 ASGI import: FastAPI True
 Transcript smoke test: exact transcript preserved = True
+Hugging Face Space status: Running
+Container: Uvicorn running on http://0.0.0.0:7860
+Public URL: https://ahmedbeba-beba.hf.space/
 ```
 
-## Next Step To Publish Free
+## Redeploy Notes
 
-Create or log in to Hugging Face, then run:
+The Hugging Face Space contains a Dockerfile that pulls the current GitHub `main` branch during build:
 
-```powershell
-cd "D:\Eng. OLA"
-$env:HF_TOKEN="hf_your_token_here"
-.\DEPLOY_HUGGINGFACE_SPACE.ps1 -SpaceId "YOUR_HF_USERNAME/ola-360"
+```text
+https://github.com/ahmedlabib33-boop/Eng-ola-control-center
 ```
 
-After deployment, open:
+When the GitHub repo is updated, restart/rebuild the Hugging Face Space to pull the latest app code.
 
 ```text
 https://huggingface.co/spaces/YOUR_HF_USERNAME/ola-360
