@@ -52,7 +52,28 @@ Local URL:
 http://127.0.0.1:6194
 ```
 
+## Launcher Menu Prompt
+
+```powershell
+cd "D:\Eng. OLA"
+.\run.bat
+```
+
+Choose:
+
+```text
+1 = Web app
+2 = Desktop app
+```
+
 ## Run Flet Web Prompt
+
+```powershell
+cd "D:\Eng. OLA"
+.\run_web.bat
+```
+
+Alternative:
 
 ```powershell
 cd "D:\Eng. OLA"
@@ -60,6 +81,13 @@ cd "D:\Eng. OLA"
 ```
 
 ## Run Flet Desktop Prompt
+
+```powershell
+cd "D:\Eng. OLA"
+.\run_desktop.bat
+```
+
+Alternative:
 
 ```powershell
 cd "D:\Eng. OLA"
@@ -322,4 +350,3 @@ Before final delivery:
 5. Sync to GitHub if requested.
 6. Report the repo URL, commit hash, and exact commands used.
 ```
-
