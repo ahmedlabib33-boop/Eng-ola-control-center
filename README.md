@@ -53,6 +53,7 @@ Render settings:
 The repository includes `render.yaml`, `.python-version`, and `Procfile` for deployment. Streamlit Cloud remains only a compatibility notice and is not the main public app host.
 
 Full deployment checklist: `docs/RENDER_DEPLOYMENT.md`.
+Current project and deployment report: `docs/PROJECT_REPORT.md`.
 
 ## No-Card Free Deployment
 
