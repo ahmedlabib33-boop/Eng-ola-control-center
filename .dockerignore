@@ -1,0 +1,14 @@
+.git
+.venv
+OLD PROGRAM
+__pycache__
+*.pyc
+.pytest_cache
+data/*.db
+logs/*
+exports/*
+uploads/*
+*.log
+*.pid
+.env
+.env.local

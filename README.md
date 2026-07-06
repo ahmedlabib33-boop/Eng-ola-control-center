@@ -1,3 +1,10 @@
+---
+title: OLA 360
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # OLA 360
 
 **OLA 360 | Executive PMO Chief of Staff** is a mobile-first Flet application for secure morning briefings, early warnings, meetings, commitments, safe AI assistance, and private personal productivity.
@@ -44,6 +51,15 @@ Render settings:
 The repository includes `render.yaml`, `.python-version`, and `Procfile` for deployment. Streamlit Cloud remains only a compatibility notice and is not the main public app host.
 
 Full deployment checklist: `docs/RENDER_DEPLOYMENT.md`.
+
+## No-Card Free Deployment
+
+If Render asks for a credit card, deploy on Hugging Face Spaces using Docker CPU Basic.
+
+- Dockerfile: `Dockerfile`
+- App port: `7860`
+- Start command inside Docker: `uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860}`
+- Guide: `docs/HUGGINGFACE_SPACES_DEPLOYMENT.md`
 
 ## Data Input Templates
 
